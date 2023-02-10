@@ -47,3 +47,22 @@ export async function postCustomer(req, res) {
         res.status(500).send(error.message)
     }
 }
+
+//Atualizat cliente
+export async function updateCustomer(req, res) {
+    const id = req.params.id
+    const { name, phone, cpf, birthday } = req.body
+
+    try {
+        const alreadyExist = await db.query(`SELECT * FROM customers WHERE cpf = $1;`, [cpf])
+        if (alreadyExist.rows > 0) return res.sendStatus(409)
+
+        await db.query(`UPDATE customers SET name = $1, phone = $2, cpf = $3, birthday = $4 WHERE id = $5;`,
+            [name, phone, cpf, birthday, id])
+
+        res.sendStatus(201)
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
