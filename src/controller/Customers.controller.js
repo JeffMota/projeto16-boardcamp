@@ -29,3 +29,21 @@ export async function getCustomerById(req, res) {
         res.status(500).send(error.message)
     }
 }
+
+//Cadastrar cliente
+export async function postCustomer(req, res) {
+    const { name, phone, cpf, birthday } = req.body
+
+    try {
+        const alreadyExist = await db.query(`SELECT * FROM customers WHERE name = $1;`, [name])
+        if (alreadyExist.rows > 0) return res.sendStatus(409)
+
+        await db.query(`INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);`,
+            [name, phone, cpf, birthday])
+
+        res.sendStatus(201)
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
