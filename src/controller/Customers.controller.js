@@ -56,7 +56,7 @@ export async function updateCustomer(req, res) {
     try {
         const alreadyExist = await db.query(`SELECT * FROM customers WHERE cpf = $1;`, [cpf])
         if (alreadyExist.rows.length > 0) {
-            if (name !== alreadyExist.rows[0].name && phone !== alreadyExist.rows[0].phone && birthday !== alreadyExist.rows[0].birthday) {
+            if (id != alreadyExist.rows[0].id) {
                 return res.sendStatus(409)
             }
         }
