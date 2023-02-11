@@ -36,7 +36,7 @@ export async function postCustomer(req, res) {
 
     try {
         const alreadyExist = await db.query(`SELECT * FROM customers WHERE cpf = $1;`, [cpf])
-        if (alreadyExist.rows > 0) return res.sendStatus(409)
+        if (alreadyExist.rows.length > 0) return res.sendStatus(409)
 
         await db.query(`INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);`,
             [name, phone, cpf, birthday])
