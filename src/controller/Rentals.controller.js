@@ -1,6 +1,7 @@
 import dayjs from "dayjs"
 import { db } from "../config/database.js"
 
+//Listar todos os alugueis
 export async function listRentals(req, res) {
     try {
 
@@ -36,33 +37,6 @@ export async function listRentals(req, res) {
                 }
             }
         })
-
-        // const listRentals = await db.query(`SELECT * FROM rentals;`)
-        // const listCustomers = await db.query(`SELECT * FROM customers;`)
-        // const listGames = await db.query(`SELECT * FROM games;`)
-
-        // const result = []
-
-        // listRentals.rows.map(rent => {
-
-        //     const custumer = listCustomers.rows.find(cust => cust.id === rent.customerId)
-        //     const game = listGames.rows.find(game => game.id === rent.gameId)
-
-        //     let aux = {
-        //         ...rent,
-        //         customer: {
-        //             id: custumer.id,
-        //             name: custumer.name
-        //         },
-        //         game: {
-        //             id: game.id,
-        //             name: game.name
-        //         }
-        //     }
-
-        //     result.push(aux)
-        // })
-
         res.send(formatedList)
 
     } catch (error) {
@@ -70,6 +44,7 @@ export async function listRentals(req, res) {
     }
 }
 
+//Registrar aluguel
 export async function postRental(req, res) {
     const { customerId, gameId, daysRented } = req.body
 
@@ -92,5 +67,40 @@ export async function postRental(req, res) {
         res.status(500).send(error.message)
     }
 
+
+}
+
+//Retorno do aluguel
+export async function returnRental(req, res) {
+    const id = req.params.id
+
+    try {
+
+        const rent = await db.query('SELECT * FROM rentals WHERE id = $1;', [id])
+        if (rent.rows.length == 0) return res.sendStatus(404) //Se não encontrar o aluguel
+        if (rent.rows[0].returnDate !== null) return res.sendStatus(400) //Se o aluguel já foi devolvido
+
+        await db.query(`UPDATE rentals SET "returnDate" = $1 WHERE id = $2;`, [dayjs().format('YYYY/MM/DD'), id])
+
+        const diference = Date.now() - (rent.rows[0].rentDate).getTime()
+        const timeInDays = Math.floor(diference / (1000 * 3600 * 24))
+
+        if (timeInDays > rent.rows[0].daysRented) {
+
+            const dif = timeInDays - rent.rows[0].daysRented
+            const gamePrice = rent.rows[0].originalPrice / rent.rows[0].daysRented
+            const pricePerDelay = dif * gamePrice
+
+            await db.query(`UPDATE rentals SET "delayFee" = $1 WHERE id = $2;`, [pricePerDelay, id])
+
+        } else {
+            await db.query(`UPDATE rentals SET "delayFee" = 000 WHERE id = $1;`, [id])
+        }
+
+        res.sendStatus(200)
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
 
 }
