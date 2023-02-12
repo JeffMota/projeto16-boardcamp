@@ -2,9 +2,20 @@ import { db } from "../config/database.js"
 
 //Listar todos os clientes
 export async function listCustomers(req, res) {
+    const cpf = req.query.cpf
+
     try {
+        const filtered = []
 
         const list = await db.query(`SELECT * FROM customers;`)
+
+        if (cpf) {
+            list.rows.map(cust => {
+                const init = cust.cpf.slice(0, cpf.length)
+                if (init === cpf) filtered.push(cust)
+            })
+            return res.send(filtered)
+        }
 
         res.send(list.rows)
 
