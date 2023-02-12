@@ -3,6 +3,9 @@ import { db } from "../config/database.js"
 
 //Listar todos os alugueis
 export async function listRentals(req, res) {
+    const customerId = req.query.customerId
+    const gameId = req.query.gameId
+
     try {
 
         const unformatList = await db.query(
@@ -37,6 +40,22 @@ export async function listRentals(req, res) {
                 }
             }
         })
+
+        const filtered = []
+
+        if (customerId) {
+            formatedList.map(elm => {
+                if (elm.customerId == customerId) filtered.push(elm)
+            })
+            return res.send(filtered)
+        }
+        if (gameId) {
+            formatedList.map(elm => {
+                if (elm.gameId == gameId) filtered.push(elm)
+            })
+            return res.send(filtered)
+        }
+
         res.send(formatedList)
 
     } catch (error) {
